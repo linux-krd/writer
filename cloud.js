@@ -24,7 +24,7 @@ function setUi(user) {
 async function edge(action, body = {}) {
   const { data: { session } } = await client.auth.getSession();
   if (!session?.access_token) throw new Error('ابتدا وارد حساب شوید.');
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/drive-sync?action=${encodeURIComponent(action)}`, {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/dynamic-api?action=${encodeURIComponent(action)}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}`, 'apikey': SUPABASE_ANON_KEY },
     body: JSON.stringify(body)
   });
