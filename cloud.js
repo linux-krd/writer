@@ -5,7 +5,7 @@ const $ = (s) => document.querySelector(s);
 const loginBtn = $('#cloud-login'), driveBtn = $('#drive-connect'), syncBtn = $('#cloud-sync'), logoutBtn = $('#cloud-logout');
 const userEl = $('#cloud-user'), statusEl = $('#cloud-status');
 let client = null, currentUser = null, driveConnected = false, syncTimer = null, syncing = false;
-const configured = SUPABASE_URL.startsWith('https://') && !SUPABASE_URL.includes('YOUR_PROJECT') && !SUPABASE_ANON_KEY.includes('YOUR_');
+const configured = SUPABASE_URL.startsWith('https://') && SUPABASE_URL.includes('.supabase.co') && SUPABASE_ANON_KEY.startsWith('sb_publishable_');
 
 function status(message, kind = '') {
   if (!statusEl) return;
