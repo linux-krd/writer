@@ -101,12 +101,32 @@ select.pill{appearance:none}
 html[dir=ltr]{--d:-1}html{--d:1}
 @media(max-width:760px){aside{position:fixed;inset-block:0;inset-inline-start:0;z-index:8;width:80%;max-width:300px;box-shadow:0 0 30px #0004}body.focus aside{margin-inline-start:0;transform:translateX(calc(100% * var(--d)))}}
 @media print{@page{margin:20mm}html[data-th]{--bg:#fff;--ink:#000;--mute:#555;--line:#ccc;--acc:#0b5cad;--hl:#fff;--hlink:#000}aside,.top,#tb{display:none!important}body,.sheet{display:block;overflow:visible;padding:0;background:#fff}#title{font-size:26px}#ed{font-size:14pt;line-height:2;-webkit-print-color-adjust:exact;print-color-adjust:exact}#fns{font-size:11pt}}
+
+/* Cloud account panel */
+.cloud-box{border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.cloud-box button{border:0;border-radius:8px;padding:9px 10px;background:var(--btn);color:var(--btnc);font:inherit;cursor:pointer}
+.cloud-box button.secondary{background:var(--side);color:var(--ink);border:1px solid var(--line)}
+.cloud-box .cloud-muted{font-size:12px;color:var(--mute);line-height:1.7;overflow-wrap:anywhere}
+.cloud-box .cloud-actions{display:flex;gap:6px;flex-wrap:wrap}.cloud-box .cloud-actions button{flex:1;min-width:100px}
+.cloud-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#999;margin-inline-end:6px}
+.cloud-dot.ok{background:#2bb592}.cloud-dot.wait{background:#d9a400}.cloud-dot.err{background:#e5484d}
 </style>
 </head>
 <body>
 <aside>
   <div class="brand" data-i="brand"></div>
   <div class="acts"><button class="new" id="new"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5H8A5 5 0 0 0 3 8.5v7a5 5 0 0 0 5 5h8a5 5 0 0 0 5-5V12"/><path d="M9.2 14.6l.7-3 7.2-7.2a1.6 1.6 0 0 1 2.2 0l.1.1a1.6 1.6 0 0 1 0 2.2l-7.2 7.2z"/></svg><span data-i="new"></span></button><button class="nf" id="nf" data-t="nf"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="var(--mute)" stroke-width="1.8" d="M3.5 17V7.5a2 2 0 0 1 2-2h3.2l2 2.2h5.3a2 2 0 0 1 2 2V12M3.5 17a2 2 0 0 0 2 2H11"/><path stroke="currentColor" stroke-width="2.4" d="M17.5 15v6M14.5 18h6"/></svg></button></div>
+  <section class="cloud-box" aria-label="حساب و همگام‌سازی">
+    <div style="font-weight:700;font-size:14px">حساب و فضای ابری</div>
+    <div class="cloud-muted" id="cloud-user"><span class="cloud-dot"></span>وارد نشده‌اید</div>
+    <button id="cloud-login">ورود با گوگل</button>
+    <div class="cloud-actions">
+      <button class="secondary" id="drive-connect" disabled>اتصال Google Drive</button>
+      <button class="secondary" id="cloud-sync" disabled>همگام‌سازی</button>
+    </div>
+    <button class="secondary" id="cloud-logout" hidden>خروج از حساب</button>
+    <div class="cloud-muted" id="cloud-status" aria-live="polite">اطلاعات فعلاً فقط روی همین دستگاه ذخیره می‌شوند.</div>
+  </section>
   <div id="list"></div>
 </aside>
 <main>
@@ -182,7 +202,23 @@ T.en={t_col:'Text color',t_hl:'Highlight',t_none:'Default',stt:'Writing stats',s
 const DG={fa:'۰۱۲۳۴۵۶۷۸۹',ckb:'٠١٢٣٤٥٦٧٨٩',en:'0123456789'};
 let docs=[],folders=[],cur=null,st={},editId=null;
 try{folders=JSON.parse(localStorage.folders||'[]');docs=JSON.parse(localStorage.docs||'[]');st=JSON.parse(localStorage.st||'{}')}catch(e){}
-const save=()=>{try{localStorage.docs=JSON.stringify(docs);localStorage.folders=JSON.stringify(folders);localStorage.st=JSON.stringify(st)}catch(e){}};
+const save=()=>{try{
+ const oldDocs=JSON.parse(localStorage.docs||'[]'),oldFolders=JSON.parse(localStorage.folders||'[]'),oldSt=JSON.parse(localStorage.st||'{}');
+ const tomb=JSON.parse(localStorage.getItem('writer_tombstones')||'{"docs":{},"folders":{}}');
+ const now=Date.now();
+ for(const d of oldDocs)if(!docs.some(x=>String(x.id)===String(d.id)))tomb.docs[String(d.id)]=now;
+ for(const f of oldFolders)if(!folders.some(x=>String(x.id)===String(f.id)))tomb.folders[String(f.id)]=now;
+ for(const d of docs){const prev=oldDocs.find(x=>String(x.id)===String(d.id));if(prev&&JSON.stringify({...prev,u:undefined})!==JSON.stringify({...d,u:undefined}))d.u=now; if(!d.u)d.u=now;}
+ for(const f of folders){const prev=oldFolders.find(x=>String(x.id)===String(f.id));if(prev&&JSON.stringify({...prev,c:undefined,u:undefined})!==JSON.stringify({...f,c:undefined,u:undefined}))f.u=now; if(!f.u)f.u=prev?1:now;}
+ const cleanFolders=a=>a.map(({c,u,...x})=>x),cleanSt=x=>{const y={...x};delete y.cur;return y};
+ const settingsChanged=JSON.stringify(cleanSt(oldSt))!==JSON.stringify(cleanSt(st));
+ const meaningful=JSON.stringify(oldDocs)!==JSON.stringify(docs)||JSON.stringify(cleanFolders(oldFolders))!==JSON.stringify(cleanFolders(folders))||settingsChanged;
+ localStorage.docs=JSON.stringify(docs);localStorage.folders=JSON.stringify(folders);localStorage.st=JSON.stringify(st);localStorage.setItem('writer_tombstones',JSON.stringify(tomb));
+ if(meaningful)localStorage.setItem('writer_updated_at',String(now));else if(!localStorage.getItem('writer_updated_at'))localStorage.setItem('writer_updated_at','0');
+ if(settingsChanged)localStorage.setItem('writer_settings_updated_at',String(now));else if(!localStorage.getItem('writer_settings_updated_at'))localStorage.setItem('writer_settings_updated_at','0');
+ localStorage.setItem('writer_sync_baseline',JSON.stringify({docs:docs.map(x=>x.id),folders:folders.map(x=>x.id)}));
+ if(window.NawisaCloud)window.NawisaCloud.queueSync();
+ }catch(e){console.warn('Local save failed',e)}};
 const L=()=>st.l||'fa',t=k=>T[L()][k],num=n=>String(n).replace(/\d/g,d=>DG[L()][d]);
 function status(k){const e=$('#saved');e.dataset.i=k;e.textContent=t(k)}
 function mk(fid){const d={id:Date.now(),t:'',h:'',u:Date.now()};if(fid)d.f=fid;docs.unshift(d);open(d.id);ed.focus()}
@@ -310,7 +346,9 @@ $('#cb').onclick=()=>showCol('c');$('#hb').onclick=()=>showCol('h');
 applyTheme();applyFont();applyLang();
 docs.length?open(docs.find(d=>d.id==st.cur)?st.cur:docs[0].id):mk();
 if(innerWidth<761)setFocus(true);
+window.NawisaApp={getSnapshot:()=>({docs,folders,st:(()=>{const x={...st};delete x.cur;return x})(),tombstones:JSON.parse(localStorage.getItem('writer_tombstones')||'{"docs":{},"folders":{}}'),updatedAt:Number(localStorage.getItem('writer_updated_at')||0),settingsUpdatedAt:Number(localStorage.getItem('writer_settings_updated_at')||0)}),applySnapshot:s=>{if(!s)return;localStorage.docs=JSON.stringify(s.docs||[]);localStorage.folders=JSON.stringify(s.folders||[]);localStorage.st=JSON.stringify(s.st||{});localStorage.setItem('writer_updated_at',String(s.updatedAt||0));localStorage.setItem('writer_settings_updated_at',String(s.settingsUpdatedAt||0));localStorage.setItem('writer_tombstones',JSON.stringify(s.tombstones||{docs:{},folders:{}}));localStorage.setItem('writer_cloud_restore','1');location.reload()}};
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
 </script>
+<script type="module" src="cloud.js"></script>
 </body>
 </html>

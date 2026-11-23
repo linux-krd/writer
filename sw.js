@@ -1,5 +1,5 @@
-const V='writer-v19',CSS=['https://cdn.jsdelivr.net/gh/rastikerdar/sahel-font@v3.4.0/dist/font-face.css','https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css'];
-self.addEventListener('install',e=>{e.waitUntil((async()=>{const c=await caches.open(V);await c.addAll(['./','./index.html','./manifest.json','./icon.svg']);
+const V='writer-v20',CSS=['https://cdn.jsdelivr.net/gh/rastikerdar/sahel-font@v3.4.0/dist/font-face.css','https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css'];
+self.addEventListener('install',e=>{e.waitUntil((async()=>{const c=await caches.open(V);await c.addAll(['./','./index.html','./manifest.json','./icon.svg','./cloud.js','./config.js']);
  for(const u of CSS){try{const r=await fetch(u);await c.put(u,r.clone());const t=await r.text();
   const urls=[...new Set([...t.matchAll(/url\(['"]?([^)'"?#]+\.woff2?)/g)].map(m=>new URL(m[1],u).href))];
   const w2=urls.filter(x=>x.endsWith('.woff2')),use=w2.length?w2:urls;
