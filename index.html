@@ -16,7 +16,8 @@
 html[data-th=black]{--bg:#121214;--side:#1b1b1e;--line:#2c2c30;--ink:#ececee;--mute:#8d8d95;--acc:#3ccfa8;--hl:#3a2f66;--hlink:#c9b8ff;--tb:#34343a;--btn:#ececee;--btnc:#121214}
 html[data-th=straw]{--bg:#f6edcf;--side:#ecdfb5;--line:#dccc9a;--ink:#3a3019;--mute:#8c7d55;--acc:#a8821a;--hl:#e8d58c;--hlink:#5a4509;--tb:#3a3019;--btn:#3a3019;--btnc:#f6edcf}
 html[data-th=olive]{--bg:#e9edd3;--side:#dce2bc;--line:#c8d09f;--ink:#2d3416;--mute:#6c7650;--acc:#6b8216;--hl:#cfd994;--hlink:#37470a;--tb:#2d3416;--btn:#2d3416;--btnc:#e9edd3}
-*{box-sizing:border-box}
+*{box-sizing:border-box;scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar{display:none;width:0;height:0}
 html,body{height:100%;margin:0}
 body{font-family:var(--font);background:var(--bg);color:var(--ink);display:flex;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 button,select,input{font-family:inherit;color:inherit}
@@ -80,7 +81,10 @@ select.pill{appearance:none}
 .new{display:flex;align-items:center;justify-content:center;gap:8px}.new svg{flex:none}.nf{display:grid;place-items:center}
 .hr{border:0;border-top:1px solid var(--line);margin:0}.sg{display:grid;grid-template-columns:1fr auto;gap:6px 14px;font-size:13px}.sg span:nth-child(odd){color:var(--mute)}.sg span:nth-child(even){font-weight:600}
 .fi{display:grid;place-items:center;flex:none}
-.acts{display:flex;gap:6px}.acts .new{flex:1}
+.acts{display:flex;gap:6px}
+#tb .sw{height:28px;width:28px;min-width:0;margin:5px 3px;border-radius:50%;border:2px solid #fff6}
+#tb .sw.none{background:linear-gradient(135deg,transparent 44%,#e5484d 44% 56%,transparent 56%)}
+#ed{-webkit-print-color-adjust:exact;print-color-adjust:exact}.acts .new{flex:1}
 .nf{min-width:48px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;cursor:pointer;font-size:14px}
 .fh{display:flex;align-items:center;gap:4px;padding:7px 8px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;margin-top:2px}
 .fh:hover{background:var(--line)}
@@ -96,7 +100,7 @@ select.pill{appearance:none}
 #mvm button:hover{background:var(--side)}#mvm button.on{color:var(--acc)}
 html[dir=ltr]{--d:-1}html{--d:1}
 @media(max-width:760px){aside{position:fixed;inset-block:0;inset-inline-start:0;z-index:8;width:80%;max-width:300px;box-shadow:0 0 30px #0004}body.focus aside{margin-inline-start:0;transform:translateX(calc(100% * var(--d)))}}
-@media print{@page{margin:20mm}html[data-th]{--bg:#fff;--ink:#000;--mute:#555;--line:#ccc;--acc:#0b5cad;--hl:#fff;--hlink:#000}aside,.top,#tb{display:none!important}body,.sheet{display:block;overflow:visible;padding:0;background:#fff}#title{font-size:26px}#ed{font-size:14pt;line-height:2}#fns{font-size:11pt}}
+@media print{@page{margin:20mm}html[data-th]{--bg:#fff;--ink:#000;--mute:#555;--line:#ccc;--acc:#0b5cad;--hl:#fff;--hlink:#000}aside,.top,#tb{display:none!important}body,.sheet{display:block;overflow:visible;padding:0;background:#fff}#title{font-size:26px}#ed{font-size:14pt;line-height:2;-webkit-print-color-adjust:exact;print-color-adjust:exact}#fns{font-size:11pt}}
 </style>
 </head>
 <body>
@@ -153,11 +157,14 @@ html[dir=ltr]{--d:-1}html{--d:1}
     <button data-c="strikeThrough" data-t="t_s"><s>S</s></button>
     <button data-c="subscript" data-t="t_sub">x<sub>2</sub></button>
     <button data-c="superscript" data-t="t_sup">x<sup>2</sup></button><i></i>
+    <button id="cb" data-t="t_col"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15.5L12 4l5 11.5M8.7 11.8h6.6" stroke="currentColor" stroke-width="2"/><rect id="cbar" x="4" y="18.3" width="16" height="3" rx="1.5" fill="#e5484d" stroke="none"/></svg></button>
+    <button id="hb" data-t="t_hl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14.6 3.8l5.6 5.6-8.4 8.4H7.2v-5.6z" stroke="currentColor" stroke-width="1.9"/><rect id="hbar" x="4" y="19.3" width="16" height="2.6" rx="1.3" fill="#f5c518" stroke="none"/></svg></button><i></i>
     <button data-c="insertUnorderedList" data-t="t_ul">•≡</button>
     <button data-c="insertOrderedList" data-t="t_ol">1≡</button>
     <button id="fnb" data-t="t_fn">¹</button>
     <button id="lkb" data-t="t_link">🔗</button>
   </div>
+  <div class="row" id="col-row" hidden></div>
   <div class="row" id="lk-row" hidden>
     <input id="lk" type="url" inputmode="url" placeholder="https://example.com" dir="ltr">
     <button id="lk-ok" data-t="t_ok">✓</button>
@@ -169,9 +176,9 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],ed=
 const T={
 fa:{brand:'نویسه',new:'نوشتهٔ تازه',title_ph:'عنوان',ed_ph:'از اینجا شروع به نوشتن کنید. برای قالب‌بندی، متن را انتخاب کنید.',words:'واژه',saved:'ذخیره شد',saving:'در حال ذخیره…',wr:'نوشتن',fo:'تمرکز',pdf:'ذخیره PDF',settings:'تنظیمات',menu:'فهرست نوشته‌ها',theme:'تم',th_straw:'کاهی',th_black:'سیاه',th_white:'سفید',th_olive:'زیتونی',font:'فونت',size:'اندازهٔ متن',s1:'کوچک',s2:'متوسط',s3:'بزرگ',lang:'زبان',untitled:'بدون عنوان',delq:'این نوشته حذف شود؟',del:'حذف',doc:'نوشته',fnh:'پاورقی‌ها',fn_ph:'متن پاورقی را بنویسید…',t_p:'پاراگراف',t_h1:'عنوان ۱',t_h2:'عنوان ۲',t_h3:'عنوان ۳',t_q:'نقل‌قول',t_b:'پررنگ',t_i:'کج',t_u:'زیرخط',t_s:'خط‌خورده',t_ul:'فهرست نقطه‌ای',t_ol:'فهرست شمارشی',t_fn:'پاورقی',t_link:'پیوند',t_ok:'تأیید',t_x:'انصراف'},
 ckb:{brand:'نووسەر',new:'نووسینی نوێ',title_ph:'ناونیشان',ed_ph:'لێرەوە دەست بە نووسین بکە. بۆ ڕێکخستنی دەق، دیاری بکە.',words:'وشە',saved:'هەڵگیرا',saving:'خەریکی هەڵگرتنە…',wr:'نووسین',fo:'سەرنج',pdf:'هەڵگرتن وەک PDF',settings:'ڕێکخستنەکان',menu:'لیستی نووسینەکان',theme:'تێم',th_straw:'کایی',th_black:'ڕەش',th_white:'سپی',th_olive:'زەیتوونی',font:'فۆنت',size:'قەبارەی دەق',s1:'بچووک',s2:'ناوەند',s3:'گەورە',lang:'زمان',untitled:'بێ ناونیشان',delq:'ئەم نووسینە بسڕدرێتەوە؟',del:'سڕینەوە',doc:'نووسین',fnh:'پەراوێزەکان',fn_ph:'دەقی پەراوێزەکە بنووسە…',t_p:'بڕگە',t_h1:'ناونیشانی ١',t_h2:'ناونیشانی ٢',t_h3:'ناونیشانی ٣',t_q:'وتە',t_b:'ئەستوور',t_i:'لار',t_u:'هێڵ لەژێر',t_s:'هێڵ بەسەردا',t_ul:'لیستی خاڵی',t_ol:'لیستی ژمارەیی',t_fn:'پەراوێز',t_link:'بەستەر',t_ok:'پەسەندکردن',t_x:'هەڵوەشاندنەوە'}};
-Object.assign(T.fa,{stt:'آمار نوشته',s_words:'کلمه‌ها',s_chars:'کاراکتر (با فاصله)',s_nosp:'کاراکتر (بدون فاصله)',s_letters:'حرف‌ها',s_spaces:'فاصله‌ها (اسپیس)',s_paras:'پاراگراف‌ها',s_sent:'جمله‌ها',s_read:'زمان مطالعه',min:'دقیقه',s_fn:'پاورقی‌ها',nf:'پوشهٔ تازه',fname_ph:'نام پوشه',nofolder:'بدون پوشه',mv:'انتقال به پوشه',rn:'تغییر نام',delfq:'این پوشه حذف شود؟ نوشته‌های داخل آن حذف نمی‌شوند.',addin:'نوشتهٔ تازه در این پوشه',t_sub:'زیرنویس',t_sup:'بالانویس'});
-Object.assign(T.ckb,{stt:'ئاماری نووسین',s_words:'وشەکان',s_chars:'کاراکتەر (لەگەڵ بۆشایی)',s_nosp:'کاراکتەر (بێ بۆشایی)',s_letters:'پیتەکان',s_spaces:'بۆشاییەکان (سپەیس)',s_paras:'بڕگەکان',s_sent:'ڕستەکان',s_read:'کاتی خوێندنەوە',min:'خولەک',s_fn:'پەراوێزەکان',nf:'فۆڵدەری نوێ',fname_ph:'ناوی فۆڵدەر',nofolder:'بێ فۆڵدەر',mv:'گواستنەوە بۆ فۆڵدەر',rn:'گۆڕینی ناو',delfq:'ئەم فۆڵدەرە بسڕدرێتەوە؟ نووسینەکانی ناوی ناسڕدرێنەوە.',addin:'نووسینی نوێ لەم فۆڵدەرەدا',t_sub:'خوارنووس',t_sup:'سەرنووس'});
-T.en={stt:'Writing stats',s_words:'Words',s_chars:'Characters (with spaces)',s_nosp:'Characters (no spaces)',s_letters:'Letters',s_spaces:'Spaces',s_paras:'Paragraphs',s_sent:'Sentences',s_read:'Reading time',min:'min',s_fn:'Footnotes',brand:'Writer',new:'New story',title_ph:'Title',ed_ph:'Start writing here. Select text to format it.',words:'words',saved:'Saved',saving:'Saving…',wr:'Write',fo:'Focus',pdf:'Save PDF',settings:'Settings',theme:'Theme',th_straw:'Straw',th_black:'Black',th_white:'White',th_olive:'Olive',font:'Font',size:'Text size',s1:'Small',s2:'Medium',s3:'Large',lang:'Language',untitled:'Untitled',delq:'Delete this story?',del:'Delete',doc:'Story',fnh:'Footnotes',fn_ph:'Write the footnote…',t_p:'Paragraph',t_h1:'Heading 1',t_h2:'Heading 2',t_h3:'Heading 3',t_q:'Quote',t_b:'Bold',t_i:'Italic',t_u:'Underline',t_s:'Strikethrough',t_sub:'Subscript',t_sup:'Superscript',t_ul:'Bulleted list',t_ol:'Numbered list',t_fn:'Footnote',t_link:'Link',t_ok:'Apply',t_x:'Cancel',nf:'New folder',fname_ph:'Folder name',nofolder:'No folder',mv:'Move to folder',rn:'Rename',delfq:'Delete this folder? The stories inside are kept.',addin:'New story in this folder'};
+Object.assign(T.fa,{t_col:'رنگ متن',t_hl:'هایلایت',t_none:'پیش‌فرض',stt:'آمار نوشته',s_words:'کلمه‌ها',s_chars:'کاراکتر (با فاصله)',s_nosp:'کاراکتر (بدون فاصله)',s_letters:'حرف‌ها',s_spaces:'فاصله‌ها (اسپیس)',s_paras:'پاراگراف‌ها',s_sent:'جمله‌ها',s_read:'زمان مطالعه',min:'دقیقه',s_fn:'پاورقی‌ها',nf:'پوشهٔ تازه',fname_ph:'نام پوشه',nofolder:'بدون پوشه',mv:'انتقال به پوشه',rn:'تغییر نام',delfq:'این پوشه حذف شود؟ نوشته‌های داخل آن حذف نمی‌شوند.',addin:'نوشتهٔ تازه در این پوشه',t_sub:'زیرنویس',t_sup:'بالانویس'});
+Object.assign(T.ckb,{t_col:'ڕەنگی دەق',t_hl:'هایلایت',t_none:'بنەڕەتی',stt:'ئاماری نووسین',s_words:'وشەکان',s_chars:'کاراکتەر (لەگەڵ بۆشایی)',s_nosp:'کاراکتەر (بێ بۆشایی)',s_letters:'پیتەکان',s_spaces:'بۆشاییەکان (سپەیس)',s_paras:'بڕگەکان',s_sent:'ڕستەکان',s_read:'کاتی خوێندنەوە',min:'خولەک',s_fn:'پەراوێزەکان',nf:'فۆڵدەری نوێ',fname_ph:'ناوی فۆڵدەر',nofolder:'بێ فۆڵدەر',mv:'گواستنەوە بۆ فۆڵدەر',rn:'گۆڕینی ناو',delfq:'ئەم فۆڵدەرە بسڕدرێتەوە؟ نووسینەکانی ناوی ناسڕدرێنەوە.',addin:'نووسینی نوێ لەم فۆڵدەرەدا',t_sub:'خوارنووس',t_sup:'سەرنووس'});
+T.en={t_col:'Text color',t_hl:'Highlight',t_none:'Default',stt:'Writing stats',s_words:'Words',s_chars:'Characters (with spaces)',s_nosp:'Characters (no spaces)',s_letters:'Letters',s_spaces:'Spaces',s_paras:'Paragraphs',s_sent:'Sentences',s_read:'Reading time',min:'min',s_fn:'Footnotes',brand:'Writer',new:'New story',title_ph:'Title',ed_ph:'Start writing here. Select text to format it.',words:'words',saved:'Saved',saving:'Saving…',wr:'Write',fo:'Focus',pdf:'Save PDF',settings:'Settings',theme:'Theme',th_straw:'Straw',th_black:'Black',th_white:'White',th_olive:'Olive',font:'Font',size:'Text size',s1:'Small',s2:'Medium',s3:'Large',lang:'Language',untitled:'Untitled',delq:'Delete this story?',del:'Delete',doc:'Story',fnh:'Footnotes',fn_ph:'Write the footnote…',t_p:'Paragraph',t_h1:'Heading 1',t_h2:'Heading 2',t_h3:'Heading 3',t_q:'Quote',t_b:'Bold',t_i:'Italic',t_u:'Underline',t_s:'Strikethrough',t_sub:'Subscript',t_sup:'Superscript',t_ul:'Bulleted list',t_ol:'Numbered list',t_fn:'Footnote',t_link:'Link',t_ok:'Apply',t_x:'Cancel',nf:'New folder',fname_ph:'Folder name',nofolder:'No folder',mv:'Move to folder',rn:'Rename',delfq:'Delete this folder? The stories inside are kept.',addin:'New story in this folder'};
 const DG={fa:'۰۱۲۳۴۵۶۷۸۹',ckb:'٠١٢٣٤٥٦٧٨٩',en:'0123456789'};
 let docs=[],folders=[],cur=null,st={},editId=null;
 try{folders=JSON.parse(localStorage.folders||'[]');docs=JSON.parse(localStorage.docs||'[]');st=JSON.parse(localStorage.st||'{}')}catch(e){}
@@ -261,7 +268,7 @@ $$('[data-l]').forEach(b=>b.onclick=()=>{st.l=b.dataset.l;save();applyLang()});
 /* نوار شناور */
 let linking=false,saved=null;
 const lkRow=$('#lk-row'),mainRow=$('#main-row');
-function place(){if(linking)return;const s=getSelection();if(!s.rangeCount||s.isCollapsed||!ed.contains(s.anchorNode)){tb.classList.remove('show');return}
+function place(){if(linking)return;const s=getSelection();if(!s.rangeCount||s.isCollapsed||!ed.contains(s.anchorNode)){tb.classList.remove('show');const cr=$('#col-row');if(!cr.hidden){cr.hidden=true;mainRow.hidden=false}return}
  const r=s.getRangeAt(0).getBoundingClientRect();tb.classList.add('show');const w=tb.offsetWidth;
  let x=r.left+r.width/2-w/2;x=Math.max(8,Math.min(x,innerWidth-w-8));let y=r.top-tb.offsetHeight-12;if(y<8)y=r.bottom+12;
  tb.style.left=x+'px';tb.style.top=y+'px';
@@ -284,6 +291,21 @@ function okLink(){const u=normUrl($('#lk').value);const rg=saved;linking=false;l
  touch();setTimeout(place,10)}
 $('#lk-ok').onclick=okLink;$('#lk-x').onclick=endLink;
 $('#lk').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();okLink()}else if(e.key==='Escape')endLink()};
+
+/* رنگ و هایلایت */
+const PAL={c:['#e5484d','#f76b15','#d9a400','#30a46c','#12a594','#3e63dd','#8e4ec6','#d6409f','#8b8d98'],h:['rgba(255,214,0,.45)','rgba(255,150,50,.4)','rgba(48,196,108,.38)','rgba(62,140,255,.38)','rgba(214,64,159,.35)','rgba(142,78,198,.38)','rgba(139,141,152,.4)']};
+let cmode='c';
+function backMain(){$('#col-row').hidden=true;mainRow.hidden=false;setTimeout(place,10)}
+function showCol(m){cmode=m;const r=$('#col-row');r.innerHTML='';
+ const mkb=(cls,fn,txt)=>{const b=document.createElement('button');if(cls)b.className=cls;if(txt)b.textContent=txt;b.onclick=fn;r.append(b);return b};
+ mkb('sw none',()=>applyCol(null)).title=t('t_none');
+ PAL[m].forEach(c=>{mkb('sw',()=>applyCol(c)).style.background=c});
+ mkb('',backMain,'✕');mainRow.hidden=true;r.hidden=false;setTimeout(place,10)}
+function clearStyle(p){const s=getSelection();if(!s.rangeCount)return;const rg=s.getRangeAt(0);ed.querySelectorAll('[style]').forEach(el=>{if(rg.intersectsNode(el)){el.style[p]='';if(!el.getAttribute('style'))el.removeAttribute('style')}})}
+function applyCol(c){const fg=cmode==='c';document.execCommand('styleWithCSS',false,true);
+ if(c){document.execCommand(fg?'foreColor':'hiliteColor',false,c);(fg?$('#cbar'):$('#hbar')).setAttribute('fill',c.replace(/,[^,]*\)$/,',1)'))}else clearStyle(fg?'color':'backgroundColor');
+ document.execCommand('styleWithCSS',false,false);touch();backMain()}
+$('#cb').onclick=()=>showCol('c');$('#hb').onclick=()=>showCol('h');
 /* شروع */
 applyTheme();applyFont();applyLang();
 docs.length?open(docs.find(d=>d.id==st.cur)?st.cur:docs[0].id):mk();
