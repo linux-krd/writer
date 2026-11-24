@@ -108,6 +108,11 @@ html[dir=ltr]{--d:-1}html{--d:1}
 .cloud-box button.secondary{background:var(--side);color:var(--ink);border:1px solid var(--line)}
 .cloud-box .cloud-muted{font-size:12px;color:var(--mute);line-height:1.7;overflow-wrap:anywhere}
 .cloud-box .cloud-actions{display:flex;gap:6px;flex-wrap:wrap}.cloud-box .cloud-actions button{flex:1;min-width:100px}
+.dd{position:absolute;width:8px;height:8px;border-radius:50%;background:#999;inset-block-end:3px;inset-inline-end:3px;border:1.5px solid var(--bg)}
+.dd.ok{background:#2bb592}.dd.err{background:#e5484d}.dd.wait{background:#d9a400}.ib{position:relative}
+.dpanel{width:min(350px,92vw);padding:14px;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.dhead{display:flex;align-items:center;gap:10px;margin-bottom:12px}.dhead b{display:block;font-size:15px}.dhead small{color:var(--mute);font-size:12px}
+.dpanel .cloud-box{border:0;padding:0}
 .cloud-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#999;margin-inline-end:6px}
 .cloud-dot.ok{background:#2bb592}.cloud-dot.wait{background:#d9a400}.cloud-dot.err{background:#e5484d}
 </style>
@@ -116,17 +121,6 @@ html[dir=ltr]{--d:-1}html{--d:1}
 <aside>
   <div class="brand" data-i="brand"></div>
   <div class="acts"><button class="new" id="new"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 3.5H8A5 5 0 0 0 3 8.5v7a5 5 0 0 0 5 5h8a5 5 0 0 0 5-5V12"/><path d="M9.2 14.6l.7-3 7.2-7.2a1.6 1.6 0 0 1 2.2 0l.1.1a1.6 1.6 0 0 1 0 2.2l-7.2 7.2z"/></svg><span data-i="new"></span></button><button class="nf" id="nf" data-t="nf"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="var(--mute)" stroke-width="1.8" d="M3.5 17V7.5a2 2 0 0 1 2-2h3.2l2 2.2h5.3a2 2 0 0 1 2 2V12M3.5 17a2 2 0 0 0 2 2H11"/><path stroke="currentColor" stroke-width="2.4" d="M17.5 15v6M14.5 18h6"/></svg></button></div>
-  <section class="cloud-box" aria-label="حساب و همگام‌سازی">
-    <div style="font-weight:700;font-size:14px">حساب و فضای ابری</div>
-    <div class="cloud-muted" id="cloud-user"><span class="cloud-dot"></span>وارد نشده‌اید</div>
-    <button id="cloud-login">ورود با گوگل</button>
-    <div class="cloud-actions">
-      <button class="secondary" id="drive-connect" disabled>اتصال Google Drive</button>
-      <button class="secondary" id="cloud-sync" disabled>همگام‌سازی</button>
-    </div>
-    <button class="secondary" id="cloud-logout" hidden>خروج از حساب</button>
-    <div class="cloud-muted" id="cloud-status" aria-live="polite">اطلاعات فعلاً فقط روی همین دستگاه ذخیره می‌شوند.</div>
-  </section>
   <div id="list"></div>
 </aside>
 <main>
@@ -134,6 +128,7 @@ html[dir=ltr]{--d:-1}html{--d:1}
     <div class="grp rel">
       <button class="ib" id="gear" data-t="settings" ><svg viewBox="0 0 24 24" width="24" height="24" stroke-linejoin="round"><path fill="var(--mute)" fill-opacity=".4" stroke="var(--mute)" stroke-opacity=".4" stroke-width="1" d="M10.37 1.73L13.63 1.73L14.15 4.50L15.78 5.18L18.11 3.59L20.41 5.89L18.82 8.22L19.50 9.85L22.27 10.37L22.27 13.63L19.50 14.15L18.82 15.78L20.41 18.11L18.11 20.41L15.78 18.82L14.15 19.50L13.63 22.27L10.37 22.27L9.85 19.50L8.22 18.82L5.89 20.41L3.59 18.11L5.18 15.78L4.50 14.15L1.73 13.63L1.73 10.37L4.50 9.85L5.18 8.22L3.59 5.89L5.89 3.59L8.22 5.18L9.85 4.50Z"/><circle cx="12" cy="12" r="3.3" fill="var(--ink)"/></svg></button>
       <button class="ib" id="sbtn" data-t="stt"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="var(--mute)" fill-opacity=".55" d="M12 2.2c4.2 3.1 6.6 6.4 6.6 10.3a6.6 6.6 0 0 1-13.2 0c0-3.9 2.4-7.2 6.6-10.3z"/><path fill="var(--ink)" fill-opacity=".75" d="M12 6.8c2.3 2 3.6 3.9 3.6 6.1a3.6 3.6 0 0 1-7.2 0c0-2.2 1.3-4.1 3.6-6.1z"/><circle cx="12" cy="12.6" r="1.1" fill="var(--bg)"/><path d="M12 13.4v6" stroke="var(--bg)" stroke-width="1.1"/><path d="M12 19.5v2.6" stroke="var(--ink)" stroke-opacity=".75" stroke-width="1.6"/></svg></button>
+      <button class="ib" id="dbtn" data-t="drv" aria-label="Google Drive"><img src="drive.png" width="22" height="22" alt="" draggable="false"><span class="dd" id="ddot"></span></button>
       <div class="panel" id="panel" hidden>
         <div><label data-i="theme"></label><div class="opts">
           <button data-theme="straw"><span class="dot" style="background:#f6edcf"></span><span data-i="th_straw"></span></button>
@@ -153,6 +148,19 @@ html[dir=ltr]{--d:-1}html{--d:1}
         </div></div>
       </div>
       <div class="panel" id="spanel" hidden><div><label data-i="stt"></label><div class="sg" id="sg"></div></div></div>
+      <div class="panel dpanel" id="dpanel" hidden>
+        <div class="dhead"><img src="drive.png" width="34" height="34" alt="" draggable="false"><div><b data-i="drv"></b><small>Google Drive</small></div></div>
+        <section class="cloud-box" aria-label="حساب و هماهنگ‌سازی">
+        <div class="cloud-muted" id="cloud-user"><span class="cloud-dot"></span>وارد نشده‌اید</div>
+    <button type="button" id="cloud-login">ورود با گوگل</button>
+    <div class="cloud-actions">
+      <button type="button" class="secondary" id="drive-connect" disabled>اتصال Google Drive</button>
+      <button type="button" class="secondary" id="cloud-sync" disabled>همگام‌سازی</button>
+    </div>
+    <button type="button" class="secondary" id="cloud-logout" hidden>خروج از حساب</button>
+    <div class="cloud-muted" id="cloud-status" aria-live="polite">اطلاعات فعلاً فقط روی همین دستگاه ذخیره می‌شوند.</div>
+        </section>
+      </div>
     </div>
     <div class="stats"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M5.3 15.6c1.6.9 4 1.2 5.3.3 1.4-.9 1.4-2.4 2.7-3.5 1.1-.9 3.4-1.2 5.4-2.3V4.4C11 5.2 6.4 9 5.3 15.6z" fill="var(--mute)" fill-opacity=".35" stroke="none"/><path d="M5 20.5C4.8 13 8 5.6 18.7 4.3" stroke="var(--acc)" stroke-width="2"/></svg><span id="wc"></span><span id="saved" data-i="saved"></span></div>
     <div class="grp"><div class="seg"><button id="wr" class="on" data-i="wr"></button><button id="fo" data-i="fo"></button></div>
@@ -196,9 +204,9 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],ed=
 const T={
 fa:{brand:'نویسه',new:'نوشتهٔ تازه',title_ph:'عنوان',ed_ph:'از اینجا شروع به نوشتن کنید. برای قالب‌بندی، متن را انتخاب کنید.',words:'واژه',saved:'ذخیره شد',saving:'در حال ذخیره…',wr:'نوشتن',fo:'تمرکز',pdf:'ذخیره PDF',settings:'تنظیمات',menu:'فهرست نوشته‌ها',theme:'تم',th_straw:'کاهی',th_black:'سیاه',th_white:'سفید',th_olive:'زیتونی',font:'فونت',size:'اندازهٔ متن',s1:'کوچک',s2:'متوسط',s3:'بزرگ',lang:'زبان',untitled:'بدون عنوان',delq:'این نوشته حذف شود؟',del:'حذف',doc:'نوشته',fnh:'پاورقی‌ها',fn_ph:'متن پاورقی را بنویسید…',t_p:'پاراگراف',t_h1:'عنوان ۱',t_h2:'عنوان ۲',t_h3:'عنوان ۳',t_q:'نقل‌قول',t_b:'پررنگ',t_i:'کج',t_u:'زیرخط',t_s:'خط‌خورده',t_ul:'فهرست نقطه‌ای',t_ol:'فهرست شمارشی',t_fn:'پاورقی',t_link:'پیوند',t_ok:'تأیید',t_x:'انصراف'},
 ckb:{brand:'نووسەر',new:'نووسینی نوێ',title_ph:'ناونیشان',ed_ph:'لێرەوە دەست بە نووسین بکە. بۆ ڕێکخستنی دەق، دیاری بکە.',words:'وشە',saved:'هەڵگیرا',saving:'خەریکی هەڵگرتنە…',wr:'نووسین',fo:'سەرنج',pdf:'هەڵگرتن وەک PDF',settings:'ڕێکخستنەکان',menu:'لیستی نووسینەکان',theme:'تێم',th_straw:'کایی',th_black:'ڕەش',th_white:'سپی',th_olive:'زەیتوونی',font:'فۆنت',size:'قەبارەی دەق',s1:'بچووک',s2:'ناوەند',s3:'گەورە',lang:'زمان',untitled:'بێ ناونیشان',delq:'ئەم نووسینە بسڕدرێتەوە؟',del:'سڕینەوە',doc:'نووسین',fnh:'پەراوێزەکان',fn_ph:'دەقی پەراوێزەکە بنووسە…',t_p:'بڕگە',t_h1:'ناونیشانی ١',t_h2:'ناونیشانی ٢',t_h3:'ناونیشانی ٣',t_q:'وتە',t_b:'ئەستوور',t_i:'لار',t_u:'هێڵ لەژێر',t_s:'هێڵ بەسەردا',t_ul:'لیستی خاڵی',t_ol:'لیستی ژمارەیی',t_fn:'پەراوێز',t_link:'بەستەر',t_ok:'پەسەندکردن',t_x:'هەڵوەشاندنەوە'}};
-Object.assign(T.fa,{t_col:'رنگ متن',t_hl:'هایلایت',t_none:'پیش‌فرض',stt:'آمار نوشته',s_words:'کلمه‌ها',s_chars:'کاراکتر (با فاصله)',s_nosp:'کاراکتر (بدون فاصله)',s_letters:'حرف‌ها',s_spaces:'فاصله‌ها (اسپیس)',s_paras:'پاراگراف‌ها',s_sent:'جمله‌ها',s_read:'زمان مطالعه',min:'دقیقه',s_fn:'پاورقی‌ها',nf:'پوشهٔ تازه',fname_ph:'نام پوشه',nofolder:'بدون پوشه',mv:'انتقال به پوشه',rn:'تغییر نام',delfq:'این پوشه حذف شود؟ نوشته‌های داخل آن حذف نمی‌شوند.',addin:'نوشتهٔ تازه در این پوشه',t_sub:'زیرنویس',t_sup:'بالانویس'});
-Object.assign(T.ckb,{t_col:'ڕەنگی دەق',t_hl:'هایلایت',t_none:'بنەڕەتی',stt:'ئاماری نووسین',s_words:'وشەکان',s_chars:'کاراکتەر (لەگەڵ بۆشایی)',s_nosp:'کاراکتەر (بێ بۆشایی)',s_letters:'پیتەکان',s_spaces:'بۆشاییەکان (سپەیس)',s_paras:'بڕگەکان',s_sent:'ڕستەکان',s_read:'کاتی خوێندنەوە',min:'خولەک',s_fn:'پەراوێزەکان',nf:'فۆڵدەری نوێ',fname_ph:'ناوی فۆڵدەر',nofolder:'بێ فۆڵدەر',mv:'گواستنەوە بۆ فۆڵدەر',rn:'گۆڕینی ناو',delfq:'ئەم فۆڵدەرە بسڕدرێتەوە؟ نووسینەکانی ناوی ناسڕدرێنەوە.',addin:'نووسینی نوێ لەم فۆڵدەرەدا',t_sub:'خوارنووس',t_sup:'سەرنووس'});
-T.en={t_col:'Text color',t_hl:'Highlight',t_none:'Default',stt:'Writing stats',s_words:'Words',s_chars:'Characters (with spaces)',s_nosp:'Characters (no spaces)',s_letters:'Letters',s_spaces:'Spaces',s_paras:'Paragraphs',s_sent:'Sentences',s_read:'Reading time',min:'min',s_fn:'Footnotes',brand:'Writer',new:'New story',title_ph:'Title',ed_ph:'Start writing here. Select text to format it.',words:'words',saved:'Saved',saving:'Saving…',wr:'Write',fo:'Focus',pdf:'Save PDF',settings:'Settings',theme:'Theme',th_straw:'Straw',th_black:'Black',th_white:'White',th_olive:'Olive',font:'Font',size:'Text size',s1:'Small',s2:'Medium',s3:'Large',lang:'Language',untitled:'Untitled',delq:'Delete this story?',del:'Delete',doc:'Story',fnh:'Footnotes',fn_ph:'Write the footnote…',t_p:'Paragraph',t_h1:'Heading 1',t_h2:'Heading 2',t_h3:'Heading 3',t_q:'Quote',t_b:'Bold',t_i:'Italic',t_u:'Underline',t_s:'Strikethrough',t_sub:'Subscript',t_sup:'Superscript',t_ul:'Bulleted list',t_ol:'Numbered list',t_fn:'Footnote',t_link:'Link',t_ok:'Apply',t_x:'Cancel',nf:'New folder',fname_ph:'Folder name',nofolder:'No folder',mv:'Move to folder',rn:'Rename',delfq:'Delete this folder? The stories inside are kept.',addin:'New story in this folder'};
+Object.assign(T.fa,{t_col:'رنگ متن',t_hl:'هایلایت',t_none:'پیش‌فرض',stt:'آمار نوشته',drv:'حساب و فضای ابری',s_words:'کلمه‌ها',s_chars:'کاراکتر (با فاصله)',s_nosp:'کاراکتر (بدون فاصله)',s_letters:'حرف‌ها',s_spaces:'فاصله‌ها (اسپیس)',s_paras:'پاراگراف‌ها',s_sent:'جمله‌ها',s_read:'زمان مطالعه',min:'دقیقه',s_fn:'پاورقی‌ها',nf:'پوشهٔ تازه',fname_ph:'نام پوشه',nofolder:'بدون پوشه',mv:'انتقال به پوشه',rn:'تغییر نام',delfq:'این پوشه حذف شود؟ نوشته‌های داخل آن حذف نمی‌شوند.',addin:'نوشتهٔ تازه در این پوشه',t_sub:'زیرنویس',t_sup:'بالانویس'});
+Object.assign(T.ckb,{t_col:'ڕەنگی دەق',t_hl:'هایلایت',t_none:'بنەڕەتی',stt:'ئاماری نووسین',drv:'هەژمار و فەزای هەور',s_words:'وشەکان',s_chars:'کاراکتەر (لەگەڵ بۆشایی)',s_nosp:'کاراکتەر (بێ بۆشایی)',s_letters:'پیتەکان',s_spaces:'بۆشاییەکان (سپەیس)',s_paras:'بڕگەکان',s_sent:'ڕستەکان',s_read:'کاتی خوێندنەوە',min:'خولەک',s_fn:'پەراوێزەکان',nf:'فۆڵدەری نوێ',fname_ph:'ناوی فۆڵدەر',nofolder:'بێ فۆڵدەر',mv:'گواستنەوە بۆ فۆڵدەر',rn:'گۆڕینی ناو',delfq:'ئەم فۆڵدەرە بسڕدرێتەوە؟ نووسینەکانی ناوی ناسڕدرێنەوە.',addin:'نووسینی نوێ لەم فۆڵدەرەدا',t_sub:'خوارنووس',t_sup:'سەرنووس'});
+T.en={t_col:'Text color',t_hl:'Highlight',t_none:'Default',stt:'Writing stats',drv:'Account & cloud',s_words:'Words',s_chars:'Characters (with spaces)',s_nosp:'Characters (no spaces)',s_letters:'Letters',s_spaces:'Spaces',s_paras:'Paragraphs',s_sent:'Sentences',s_read:'Reading time',min:'min',s_fn:'Footnotes',brand:'Writer',new:'New story',title_ph:'Title',ed_ph:'Start writing here. Select text to format it.',words:'words',saved:'Saved',saving:'Saving…',wr:'Write',fo:'Focus',pdf:'Save PDF',settings:'Settings',theme:'Theme',th_straw:'Straw',th_black:'Black',th_white:'White',th_olive:'Olive',font:'Font',size:'Text size',s1:'Small',s2:'Medium',s3:'Large',lang:'Language',untitled:'Untitled',delq:'Delete this story?',del:'Delete',doc:'Story',fnh:'Footnotes',fn_ph:'Write the footnote…',t_p:'Paragraph',t_h1:'Heading 1',t_h2:'Heading 2',t_h3:'Heading 3',t_q:'Quote',t_b:'Bold',t_i:'Italic',t_u:'Underline',t_s:'Strikethrough',t_sub:'Subscript',t_sup:'Superscript',t_ul:'Bulleted list',t_ol:'Numbered list',t_fn:'Footnote',t_link:'Link',t_ok:'Apply',t_x:'Cancel',nf:'New folder',fname_ph:'Folder name',nofolder:'No folder',mv:'Move to folder',rn:'Rename',delfq:'Delete this folder? The stories inside are kept.',addin:'New story in this folder'};
 const DG={fa:'۰۱۲۳۴۵۶۷۸۹',ckb:'٠١٢٣٤٥٦٧٨٩',en:'0123456789'};
 let docs=[],folders=[],cur=null,st={},editId=null;
 try{folders=JSON.parse(localStorage.folders||'[]');docs=JSON.parse(localStorage.docs||'[]');st=JSON.parse(localStorage.st||'{}')}catch(e){}
@@ -217,7 +225,7 @@ const save=()=>{try{
  if(meaningful)localStorage.setItem('writer_updated_at',String(now));else if(!localStorage.getItem('writer_updated_at'))localStorage.setItem('writer_updated_at','0');
  if(settingsChanged)localStorage.setItem('writer_settings_updated_at',String(now));else if(!localStorage.getItem('writer_settings_updated_at'))localStorage.setItem('writer_settings_updated_at','0');
  localStorage.setItem('writer_sync_baseline',JSON.stringify({docs:docs.map(x=>x.id),folders:folders.map(x=>x.id)}));
- if(window.NawisaCloud)window.NawisaCloud.queueSync();
+ if(meaningful&&window.NawisaCloud)window.NawisaCloud.queueSync();
  }catch(e){console.warn('Local save failed',e)}};
 const L=()=>st.l||'fa',t=k=>T[L()][k],num=n=>String(n).replace(/\d/g,d=>DG[L()][d]);
 function status(k){const e=$('#saved');e.dataset.i=k;e.textContent=t(k)}
@@ -278,15 +286,15 @@ $('#fo').onclick=()=>setFocus(true);
 $('#pdf').onclick=()=>{document.title=cur.t||t('doc');print()};
 $('main').addEventListener('click',()=>{if(innerWidth<761&&!document.body.classList.contains('focus'))setFocus(true)});
 /* تنظیمات */
-const panel=$('#panel'),sp=$('#spanel');
+const panel=$('#panel'),sp=$('#spanel'),dp=$('#dpanel');
 const hv=matchMedia('(hover:hover)').matches,box=$('.grp.rel');let ct;
-function openP(w){clearTimeout(ct);panel.hidden=w!=='g';sp.hidden=w!=='s';if(w==='s')stats()}
-const tog=(w,e)=>{e.stopPropagation();const el=w==='g'?panel:sp;if(!hv&&!el.hidden)el.hidden=true;else openP(w)};
-$('#gear').onclick=e=>tog('g',e);$('#sbtn').onclick=e=>tog('s',e);
-$('#gear').onmouseenter=()=>{if(hv)openP('g')};$('#sbtn').onmouseenter=()=>{if(hv)openP('s')};
+function openP(w){clearTimeout(ct);panel.hidden=w!=='g';sp.hidden=w!=='s';dp.hidden=w!=='d';if(w==='s')stats()}
+const tog=(w,e)=>{e.stopPropagation();const el=w==='g'?panel:w==='s'?sp:dp;if(!hv&&!el.hidden)el.hidden=true;else openP(w)};
+$('#gear').onclick=e=>tog('g',e);$('#sbtn').onclick=e=>tog('s',e);$('#dbtn').onclick=e=>tog('d',e);
+$('#gear').onmouseenter=()=>{if(hv)openP('g')};$('#sbtn').onmouseenter=()=>{if(hv)openP('s')};$('#dbtn').onmouseenter=()=>{if(hv)openP('d')};
 box.onmouseenter=()=>clearTimeout(ct);
-box.onmouseleave=()=>{if(hv){clearTimeout(ct);ct=setTimeout(()=>{panel.hidden=true;sp.hidden=true},300)}};
-document.addEventListener('click',e=>{if(!panel.hidden&&!panel.contains(e.target))panel.hidden=true;if(!sp.hidden&&!sp.contains(e.target))sp.hidden=true});
+box.onmouseleave=()=>{if(hv){clearTimeout(ct);ct=setTimeout(()=>{panel.hidden=true;sp.hidden=true;dp.hidden=true},300)}};
+document.addEventListener('click',e=>{if(!panel.hidden&&!panel.contains(e.target))panel.hidden=true;if(!sp.hidden&&!sp.contains(e.target))sp.hidden=true;if(!dp.hidden&&!dp.contains(e.target))dp.hidden=true});
 function applyTheme(){const th=st.th||(matchMedia('(prefers-color-scheme: dark)').matches?'black':'white');document.documentElement.dataset.th=th;
  $$('[data-theme]').forEach(b=>b.classList.toggle('on',b.dataset.theme===th));
  document.querySelector('meta[name=theme-color]').content=getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()}
@@ -346,7 +354,19 @@ $('#cb').onclick=()=>showCol('c');$('#hb').onclick=()=>showCol('h');
 applyTheme();applyFont();applyLang();
 docs.length?open(docs.find(d=>d.id==st.cur)?st.cur:docs[0].id):mk();
 if(innerWidth<761)setFocus(true);
-window.NawisaApp={getSnapshot:()=>({docs,folders,st:(()=>{const x={...st};delete x.cur;return x})(),tombstones:JSON.parse(localStorage.getItem('writer_tombstones')||'{"docs":{},"folders":{}}'),updatedAt:Number(localStorage.getItem('writer_updated_at')||0),settingsUpdatedAt:Number(localStorage.getItem('writer_settings_updated_at')||0)}),applySnapshot:s=>{if(!s)return;localStorage.docs=JSON.stringify(s.docs||[]);localStorage.folders=JSON.stringify(s.folders||[]);localStorage.st=JSON.stringify(s.st||{});localStorage.setItem('writer_updated_at',String(s.updatedAt||0));localStorage.setItem('writer_settings_updated_at',String(s.settingsUpdatedAt||0));localStorage.setItem('writer_tombstones',JSON.stringify(s.tombstones||{docs:{},folders:{}}));localStorage.setItem('writer_cloud_restore','1');location.reload()}};
+window.NawisaApp={getSnapshot:()=>({docs,folders,st:(()=>{const x={...st};delete x.cur;return x})(),tombstones:JSON.parse(localStorage.getItem('writer_tombstones')||'{"docs":{},"folders":{}}'),updatedAt:Number(localStorage.getItem('writer_updated_at')||0),settingsUpdatedAt:Number(localStorage.getItem('writer_settings_updated_at')||0)}),applySnapshot:s=>{if(!s)return;
+ const pc=cur,pt=pc&&pc.t,ph=pc&&pc.h,keep=st.cur;
+ docs=JSON.parse(JSON.stringify(s.docs||[]));folders=JSON.parse(JSON.stringify(s.folders||[]));
+ st={...(s.st||{})};if(keep!==undefined)st.cur=keep;
+ localStorage.docs=JSON.stringify(docs);localStorage.folders=JSON.stringify(folders);localStorage.st=JSON.stringify(st);
+ localStorage.setItem('writer_updated_at',String(s.updatedAt||0));localStorage.setItem('writer_settings_updated_at',String(s.settingsUpdatedAt||0));
+ localStorage.setItem('writer_tombstones',JSON.stringify(s.tombstones||{docs:{},folders:{}}));
+ localStorage.setItem('writer_sync_baseline',JSON.stringify({docs:docs.map(x=>x.id),folders:folders.map(x=>x.id)}));
+ editId=null;closeMv();
+ const c=docs.find(d=>String(d.id)===String(st.cur));
+ if(!c){docs.length?open(docs[0].id):mk();}
+ else{cur=c;if(c.t!==pt)$('#title').value=c.t;if(c.h!==ph)ed.innerHTML=c.h}
+ applyTheme();applyFont();applyLang();render();renderFn();count()}};
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
 </script>
 <script type="module" src="cloud.js"></script>

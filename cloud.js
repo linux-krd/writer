@@ -4,12 +4,14 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 const $ = (s) => document.querySelector(s);
 const loginBtn = $('#cloud-login'), driveBtn = $('#drive-connect'), syncBtn = $('#cloud-sync'), logoutBtn = $('#cloud-logout');
 const userEl = $('#cloud-user'), statusEl = $('#cloud-status');
-let client = null, currentUser = null, driveConnected = false, syncTimer = null, syncing = false;
+let client = null, currentUser = null, driveConnected = false, syncTimer = null, syncing = false, dirty = false, lastSyncEnd = 0, statusPromise = null, autoTimer = null;
+const AUTO_MIN_INTERVAL = 60000; // خودکار (بازگشت به صفحه/آنلاین شدن) حداکثر هر ۶۰ ثانیه
 const configured = SUPABASE_URL.startsWith('https://') && SUPABASE_URL.includes('.supabase.co') && SUPABASE_ANON_KEY.startsWith('sb_publishable_');
 
 function status(message, kind = '') {
   if (!statusEl) return;
   const dot = kind === 'ok' ? 'ok' : kind === 'wait' ? 'wait' : kind === 'err' ? 'err' : '';
+  const dd = $('#ddot'); if (dd) dd.className = 'dd ' + dot;
   statusEl.innerHTML = `<span class="cloud-dot ${dot}"></span>${escapeHtml(message)}`;
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -18,7 +20,7 @@ function setUi(user) {
   loginBtn.hidden = !!user;
   logoutBtn.hidden = !user;
   driveBtn.disabled = !user;
-  syncBtn.disabled = !user || !driveConnected;
+  syncBtn.disabled = !user || !driveConnected || syncing;
   userEl.textContent = user ? `${user.user_metadata?.full_name || user.email} (${user.email})` : 'وارد نشده‌اید';
 }
 async function edge(action, body = {}) {
@@ -32,35 +34,77 @@ async function edge(action, body = {}) {
   if (!res.ok) throw new Error(data.error || `خطای سرور (${res.status})`);
   return data;
 }
-async function refreshDriveStatus() {
-  if (!currentUser) { driveConnected = false; setUi(null); return; }
-  try { const d = await edge('status'); driveConnected = !!d.connected; }
-  catch { driveConnected = false; }
-  setUi(currentUser);
-  status(driveConnected ? 'Google Drive متصل است.' : 'برای همگام‌سازی، Google Drive را متصل کنید.', driveConnected ? 'ok' : '');
+function friendlyError(e) {
+  const m = String(e?.message || e || '');
+  if (!navigator.onLine || /Failed to fetch|NetworkError|Load failed/i.test(m)) return 'اتصال اینترنت برقرار نیست یا سرور در دسترس نیست. دوباره تلاش کنید.';
+  if (/Unauthorized|401|ابتدا وارد/i.test(m)) return 'نشست ورود منقضی شده است. دوباره وارد حساب گوگل شوید.';
+  if (/not connected/i.test(m)) return 'Google Drive متصل نیست. ابتدا آن را متصل کنید.';
+  if (/Google Drive API (401|403)|refresh Google token|invalid_grant/i.test(m)) return 'دسترسی به Google Drive معتبر نیست. Google Drive را دوباره متصل کنید.';
+  if (/Google Drive API 429/i.test(m)) return 'تعداد درخواست‌ها به Google Drive زیاد بود. کمی بعد دوباره تلاش کنید.';
+  return m || 'خطای ناشناخته';
 }
-async function doSync() {
-  if (!currentUser || !driveConnected || syncing || !navigator.onLine) return;
-  syncing = true; syncBtn.disabled = true; status('در حال همگام‌سازی نوشته‌ها و پوشه‌ها…', 'wait');
+function refreshDriveStatus() {
+  if (statusPromise) return statusPromise; // جلوگیری از درخواست‌های هم‌زمان status
+  statusPromise = (async () => {
+    if (!currentUser) { driveConnected = false; setUi(null); return; }
+    try { const d = await edge('status'); driveConnected = !!d.connected; }
+    catch { driveConnected = false; }
+    setUi(currentUser);
+    if (!syncing) status(driveConnected ? 'Google Drive متصل است.' : 'برای هماهنگ‌سازی، Google Drive را متصل کنید.', driveConnected ? 'ok' : '');
+  })().finally(() => { statusPromise = null; });
+  return statusPromise;
+}
+// نسخهٔ قابل‌مقایسه (مستقل از ترتیب) از داده‌های برنامه
+function canon(x) {
+  const byId = (a) => [...(a || [])].sort((p, q) => String(p.id).localeCompare(String(q.id)));
+  const stable = (v) => JSON.stringify(v, (k, val) => (val && typeof val === 'object' && !Array.isArray(val)) ? Object.keys(val).sort().reduce((o, key) => (o[key] = val[key], o), {}) : val);
+  return stable({ docs: byId(x.docs), folders: byId(x.folders), st: x.st || {}, tombstones: x.tombstones || { docs: {}, folders: {} } });
+}
+// manual=true: کلیک کاربر. در غیر این صورت: خودکار و تابع محدودیت زمانی
+async function doSync(manual = false) {
+  if (syncing) { dirty = dirty || !manual; return; }          // هم‌زمان فقط یک عملیات
+  if (!currentUser || !driveConnected) return;
+  if (!navigator.onLine) { if (manual) status('اتصال اینترنت برقرار نیست.', 'err'); return; }
+  if (!manual && !dirty && Date.now() - lastSyncEnd < AUTO_MIN_INTERVAL) return;
+  syncing = true; dirty = false; clearTimeout(syncTimer); syncBtn.disabled = true;   // قبل از هر await
+  status('در حال هماهنگ‌سازی...', 'wait');
   try {
-    const snapshot = window.NawisaApp?.getSnapshot();
-    if (!snapshot) throw new Error('داده‌های برنامه در دسترس نیستند.');
-    const result = await edge('sync', { snapshot });
+    const live = window.NawisaApp?.getSnapshot();
+    if (!live) throw new Error('داده‌های برنامه در دسترس نیستند.');
+    const sent = JSON.parse(JSON.stringify(live));            // کپی ثابت از آنچه ارسال می‌شود
+    const sentCanon = canon(sent);
+    const result = await edge('sync', { snapshot: sent });
+    let applied = false;
     if (result.snapshot) {
-      const pick = x => JSON.stringify({docs:x.docs||[],folders:x.folders||[],st:x.st||{},tombstones:x.tombstones||{docs:{},folders:{}}});
-      if (pick(snapshot) !== pick(result.snapshot)) window.NawisaApp.applySnapshot(result.snapshot);
+      const nowCanon = canon(window.NawisaApp.getSnapshot());
+      if (nowCanon !== sentCanon) {
+        dirty = true;                                         // کاربر حین هماهنگ‌سازی ویرایش کرده؛ روی داده‌اش بازنویسی نمی‌کنیم
+      } else if (canon(result.snapshot) !== sentCanon) {
+        window.NawisaApp.applySnapshot(result.snapshot);      // بدون بارگذاری مجدد صفحه
+        applied = true;
+      }
     }
-    localStorage.setItem('writer_last_cloud_sync', String(Date.now()));
-    status('همگام‌سازی کامل شد؛ نوشته‌ها و پوشه‌ها به‌روز هستند.', 'ok');
-  } catch (e) { console.error(e); status(`همگام‌سازی انجام نشد: ${e.message}`, 'err'); }
-  finally { syncing = false; syncBtn.disabled = !driveConnected; }
+    lastSyncEnd = Date.now();
+    localStorage.setItem('writer_last_cloud_sync', String(lastSyncEnd));
+    status('هماهنگ‌سازی با موفقیت انجام شد', 'ok');
+  } catch (e) { console.error(e); status(`هماهنگ‌سازی انجام نشد: ${friendlyError(e)}`, 'err'); }
+  finally {
+    syncing = false; setUi(currentUser);
+    if (dirty) queueSync();                                   // تغییرات حین عملیات، یک بار بعداً ارسال می‌شود
+  }
+}
+function autoSync() {            // رویدادهای صفحه/شبکه: ادغام و تأخیر کوتاه
+  if (!currentUser || !driveConnected) return;
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => doSync(false), 1500);
 }
 function queueSync() {
   if (!currentUser || !driveConnected) return;
+  dirty = true;
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => doSync(), 1800);
+  syncTimer = setTimeout(() => doSync(false), 1800);
 }
-window.NawisaCloud = { queueSync, sync: doSync };
+window.NawisaCloud = { queueSync, sync: () => doSync(true) };
 
 if (!configured) {
   status('برای فعال‌سازی، ابتدا آدرس و کلید Supabase را در فایل config.js وارد کنید.');
@@ -85,11 +129,18 @@ if (!configured) {
       location.href = d.url;
     } catch (e) { status(`اتصال Drive ناموفق بود: ${e.message}`, 'err'); }
   });
-  syncBtn.addEventListener('click', doSync);
-  client.auth.onAuthStateChange(async (_event, session) => {
-    setUi(session?.user || null);
-    if (session?.user) await refreshDriveStatus();
-    else { driveConnected = false; status('برای همگام‌سازی وارد حساب گوگل شوید.'); }
+  syncBtn.addEventListener('click', (ev) => { ev.preventDefault(); doSync(true); });
+  let lastUserId = null;
+  client.auth.onAuthStateChange((event, session) => {
+    // داخل callback چیزی await نمی‌کنیم (مشکل شناخته‌شدهٔ قفل در supabase-js)
+    setTimeout(async () => {
+      const user = session?.user || null;
+      if (user && user.id === lastUserId && driveConnected) { currentUser = user; return; }  // SIGNED_IN/TOKEN_REFRESHED تکراری
+      lastUserId = user?.id || null;
+      setUi(user);
+      if (user) await refreshDriveStatus();
+      else { driveConnected = false; status('برای هماهنگ‌سازی وارد حساب گوگل شوید.'); }
+    }, 0);
   });
   const params = new URLSearchParams(location.search);
   if (params.has('drive')) {
@@ -98,13 +149,11 @@ if (!configured) {
     else if (params.get('drive') === 'error') status('اتصال Google Drive کامل نشد. دوباره تلاش کنید.', 'err');
   }
   client.auth.getSession().then(async ({ data: { session } }) => {
-    setUi(session?.user || null);
-    if (session?.user) {
-      await refreshDriveStatus();
-      if (driveConnected) await doSync();
-    }
+    if (!session?.user) return;
+    currentUser = session.user;
+    await refreshDriveStatus();
+    if (driveConnected) await doSync(false);
   });
-  window.addEventListener('online', () => { if (driveConnected) doSync(); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && driveConnected) doSync(); });
-  window.addEventListener('beforeunload', () => { if (currentUser && driveConnected) clearTimeout(syncTimer); });
+  window.addEventListener('online', autoSync);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) autoSync(); });
 }
